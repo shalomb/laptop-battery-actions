@@ -1,0 +1,80 @@
+#!/bin/bash
+
+shopt -s extglob nullglob
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+script="${0##*/}"
+args="$@"
+
+device="$2"
+cmds=()
+
+source /etc/default/laptop-battery-actions
+source "$DIR/functions"
+
+log "Executing $script '$args' $$ $PPID"
+
+source <(sed -r 's/= /=/g' /sys/class/power_supply/AC/uevent)
+
+log "POWER_SUPPLY_NAME : $POWER_SUPPLY_NAME, POWER_SUPPLY_ONLINE : $POWER_SUPPLY_ONLINE"
+
+if (( POWER_SUPPLY_ONLINE == 1 )); then
+  cmds+=("runas_logged_on_user xbacklight -set $backlight_level_on_ac")
+  cmds+=('pm-powersave false')
+  cmds+=('tlp false')
+  cmds+=('tlp ac')
+  cmds+=("cpufreq-set --related --governor=performance")
+else
+for path in /sys/class/power_supply/!(AC); do
+
+  readlink "$path" | grep -iq "$device" || continue
+
+  source <(sed -r 's/= /=/g' "$path/uevent")
+
+  log "  $POWER_SUPPLY_NAME $POWER_SUPPLY_STATUS $POWER_SUPPLY_CAPACITY"
+
+  log "Collecting actions for '$POWER_SUPPLY_STATUS'"
+  [[ $POWER_SUPPLY_STATUS = Unknown ]] && continue
+
+  if [[ $POWER_SUPPLY_STATUS = Discharging ]]; then
+
+    cmds+=("runas_logged_on_user xbacklight -set $POWER_SUPPLY_CAPACITY")
+    cmds+=("cpufreq-set --related --governor=powersave")
+
+    if (( POWER_SUPPLY_CAPACITY < power_supply_critical_threshold )); then
+      log "  $POWER_SUPPLY_NAME critically low ($POWER_SUPPLY_CAPACITY < $power_supply_critical_threshold)"
+      cmds+=("wall '$POWER_SUPPLY_NAME capacity ($POWER_SUPPLY_CAPACITY%) critically low'")
+      cmds+=('runas_logged_on_user xscreensaver-command -lock')
+      cmds+=('runas_logged_on_user xset dpms force off')
+      # cmds+=('hibernate')
+    elif (( POWER_SUPPLY_CAPACITY < power_supply_low_threshold )); then
+      cmds+=('pm-powersave true')
+      cmds+=('tlp start')
+      cmds+=('tlp bat')
+      cmds+=('tlp usb')
+    elif (( POWER_SUPPLY_CAPACITY < power_supply_react_threshold )); then
+      cmds+=('pm-powersave true')
+      cmds+=('tlp start')
+      cmds+=('tlp bat')
+      cmds+=('tlp usb')
+    fi
+  else
+    cmds+=('tlp start')
+  fi
+
+done
+fi
+
+run_cmds "${cmds[@]}"
+
+log
+
+# TODO
+# Coordinate information from multiple batteries
+# DISPLAY=:0.0 su your_user -c "aplay /usr/lib/openoffice/basis3.0/share/gallery/sounds/falling.wav"
+# event=button/lid.*
+# screensaver -lock
+# xset dpms force off
+# online /sys/class/power_supply/AC/online
+# xbacklight

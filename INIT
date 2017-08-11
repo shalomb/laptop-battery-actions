@@ -1,0 +1,33 @@
+#!/bin/bash
+
+_uid=$(id -u)
+
+if (( _uid != 0 )); then
+	exec sudo "$0" "$@"
+	exit $?
+fi
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+set -eu
+
+cd "$DIR"
+
+aptitude install -y \
+  libgl1-mesa-dri xserver-xorg-video-intel libdrm-intel1 xbacklight \
+  iucode-tool intel-microcode rsync tlp cpufrequtils
+
+find etc/ -type f ! -iname "*.sw?" \
+	-exec install -g root -o root -m 0755 -C -D -v {} /{} \;
+
+if ! type -P xflux &>/dev/null; then
+	tmpdir="$(mktemp -d)"
+	( cd "$tmpdir"
+		wget -c "https://justgetflux.com/linux/xflux64.tgz"
+		tar xf xflux64.tgz
+		install -g root -o root -m 0755 -C -D -v xflux /usr/local/bin/xflux
+	)
+	rm -fr "$tmpdir"
+fi
+
+service acpid restart

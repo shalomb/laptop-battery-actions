@@ -1,0 +1,2 @@
+event=battery.*
+action=/etc/acpi/actions/low_battery_actions %e

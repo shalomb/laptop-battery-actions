@@ -1,0 +1,31 @@
+#!/bin/bash
+
+lid_state=$(< /proc/acpi/button/lid/LID/state)
+
+log() {
+  logger -it "$script" "$*"
+  mil=`date +%N | sed -r 's/.{6}$//'`
+  echo "`date +%FT%T.$mil` : $@" >> /tmp/low_battery.log
+}
+
+function hibernate {
+  type -P hibernate-ram && hibernate-ram -f && return
+  pm-is-supported --hibernate && pm-hibernate && return
+}
+
+function runas_logged_on_user {
+  local cmd="$*"
+  who | awk '$2 ~ /console|pts.0/{print $1}' | sort -u | while read -r u; do
+    ps ef -u "$u" | grep -Eio 'DISPLAY=[^ ]+' | sort -u | while read -r d; do
+      log "su -u '$u' -c '$d $cmd'"
+      su "$u" -c "$d $cmd"
+    done
+  done
+}
+
+run_cmds() {
+  for cmd; do
+    $cmd
+    log "  $cmd : $?"
+  done
+}
