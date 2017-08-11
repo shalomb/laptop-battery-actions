@@ -1,0 +1,9 @@
+﻿# Additional ignores
+*~
+*.bak*
+*.bkp*
+.*hist
+*hist
+*.svn
+*.sw*
+*.tmp*
