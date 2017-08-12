@@ -1,0 +1,33 @@
+#!/bin/bash
+
+shopt -s extglob nullglob
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+script="${0##*/}"
+args="$@"
+
+source /etc/default/laptop-battery-actions
+source "$DIR/functions"
+
+provider="$1"
+type="$2"
+event="$3"
+
+log "Now Executing $script '$args' $$ $PPID"
+
+cmds=()
+case "$event" in
+	"close")
+		cmds+=('runas_logged_on_user xscreensaver-command -lock')
+		cmds+=('runas_logged_on_user xset dpms force off')
+	;;
+	"open")
+		cmds+=('runas_logged_on_user xset dpms force on')
+		cmds+=('runas_logged_on_user xset s activate')
+		cmds+=('runas_logged_on_user xscreensaver-command -deactivate')
+	;;
+esac
+
+run_cmds "${cmds[@]}"
+
