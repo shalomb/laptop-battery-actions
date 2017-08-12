@@ -26,44 +26,45 @@ if (( POWER_SUPPLY_ONLINE == 1 )); then
   cmds+=('tlp ac')
   cmds+=("cpufreq-set --related --governor=performance")
 else
-for path in /sys/class/power_supply/!(AC); do
-
-  readlink "$path" | grep -iq "$device" || continue
-
-  source <(sed -r 's/= /=/g' "$path/uevent")
-
-  log "  $POWER_SUPPLY_NAME $POWER_SUPPLY_STATUS $POWER_SUPPLY_CAPACITY"
-
-  log "Collecting actions for '$POWER_SUPPLY_STATUS'"
-  [[ $POWER_SUPPLY_STATUS = Unknown ]] && continue
-
-  if [[ $POWER_SUPPLY_STATUS = Discharging ]]; then
-
-    cmds+=("runas_logged_on_user xbacklight -set $POWER_SUPPLY_CAPACITY")
-    cmds+=("cpufreq-set --related --governor=powersave")
-
-    if (( POWER_SUPPLY_CAPACITY < power_supply_critical_threshold )); then
-      log "  $POWER_SUPPLY_NAME critically low ($POWER_SUPPLY_CAPACITY < $power_supply_critical_threshold)"
-      cmds+=("wall '$POWER_SUPPLY_NAME capacity ($POWER_SUPPLY_CAPACITY%) critically low'")
-      cmds+=('runas_logged_on_user xscreensaver-command -lock')
-      cmds+=('runas_logged_on_user xset dpms force off')
-      # cmds+=('hibernate')
-    elif (( POWER_SUPPLY_CAPACITY < power_supply_low_threshold )); then
-      cmds+=('pm-powersave true')
+  for path in /sys/class/power_supply/!(AC); do
+  
+    readlink "$path" | grep -iq "$device" || continue
+  
+    source <(sed -r 's/= /=/g' "$path/uevent")
+  
+    log "  $POWER_SUPPLY_NAME $POWER_SUPPLY_STATUS $POWER_SUPPLY_CAPACITY"
+  
+    log "Collecting actions for '$POWER_SUPPLY_STATUS'"
+    [[ $POWER_SUPPLY_STATUS = Unknown ]] && continue
+  
+    if [[ $POWER_SUPPLY_STATUS = Discharging ]]; then
+  
+      cmds+=("runas_logged_on_user xbacklight -set $POWER_SUPPLY_CAPACITY")
+      cmds+=("cpufreq-set --related --governor=powersave")
+  
+      if (( POWER_SUPPLY_CAPACITY < power_supply_critical_threshold )); then
+        log "  $POWER_SUPPLY_NAME critically low ($POWER_SUPPLY_CAPACITY < $power_supply_critical_threshold)"
+        cmds+=("wall '$POWER_SUPPLY_NAME capacity ($POWER_SUPPLY_CAPACITY%) critically low'")
+        cmds+=('runas_logged_on_user aplay /usr/lib/libreoffice/share/gallery/sounds/beam.wav')
+        cmds+=('runas_logged_on_user xscreensaver-command -lock')
+        cmds+=('runas_logged_on_user xset dpms force off')
+        # cmds+=('hibernate')
+      elif (( POWER_SUPPLY_CAPACITY < power_supply_low_threshold )); then
+        cmds+=('pm-powersave true')
+        cmds+=('tlp start')
+        cmds+=('tlp bat')
+        cmds+=('tlp usb')
+      elif (( POWER_SUPPLY_CAPACITY < power_supply_react_threshold )); then
+        cmds+=('pm-powersave true')
+        cmds+=('tlp start')
+        cmds+=('tlp bat')
+        cmds+=('tlp usb')
+      fi
+    else
       cmds+=('tlp start')
-      cmds+=('tlp bat')
-      cmds+=('tlp usb')
-    elif (( POWER_SUPPLY_CAPACITY < power_supply_react_threshold )); then
-      cmds+=('pm-powersave true')
-      cmds+=('tlp start')
-      cmds+=('tlp bat')
-      cmds+=('tlp usb')
     fi
-  else
-    cmds+=('tlp start')
-  fi
-
-done
+  
+  done
 fi
 
 run_cmds "${cmds[@]}"
