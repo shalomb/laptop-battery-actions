@@ -73,9 +73,4 @@ log
 
 # TODO
 # Coordinate information from multiple batteries
-# DISPLAY=:0.0 su your_user -c "aplay /usr/lib/openoffice/basis3.0/share/gallery/sounds/falling.wav"
-# event=button/lid.*
-# screensaver -lock
-# xset dpms force off
-# online /sys/class/power_supply/AC/online
-# xbacklight
+# xprintidle ??
