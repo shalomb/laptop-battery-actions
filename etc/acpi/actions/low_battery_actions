@@ -41,6 +41,8 @@ else
   
     if [[ $POWER_SUPPLY_STATUS == Discharging || $AC_POWER_SUPPLY_ONLINE == 0 ]]; then
   
+      backlight_level=$( percentage_of $backlight_level_on_bat $POWER_SUPPLY_CAPACITY )
+      cmds+=("runas_logged_on_user xbacklight -set $backlight_level")
       cmds+=("cpufreq-set --related --governor=powersave")
   
       if (( POWER_SUPPLY_CAPACITY < power_supply_critical_threshold )); then

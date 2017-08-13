@@ -1,6 +1,8 @@
 #!/bin/bash
 
 backlight_level_on_ac=90
+backlight_level_on_bat=40
+
 power_supply_react_threshold=70
 power_supply_low_threshold=15
 power_supply_critical_threshold=4

@@ -29,3 +29,9 @@ run_cmds() {
     log "  $cmd : $?"
   done
 }
+
+percentage_of() {
+	local v="$1"
+	local p="$2"
+	perl -le 'print int((6/'"$p"') + ('"$v"'/100*'"$p"'))'
+}
