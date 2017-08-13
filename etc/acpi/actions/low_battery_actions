@@ -20,6 +20,7 @@ source <(sed -r 's/= /=/g' /sys/class/power_supply/AC/uevent)
 log "POWER_SUPPLY_NAME : $POWER_SUPPLY_NAME, POWER_SUPPLY_ONLINE : $POWER_SUPPLY_ONLINE"
 
 if (( POWER_SUPPLY_ONLINE == 1 )); then
+  cmds+=('runas_logged_on_user xset s default')
   cmds+=("runas_logged_on_user xbacklight -set $backlight_level_on_ac")
   cmds+=('pm-powersave false')
   cmds+=('tlp false')
@@ -50,11 +51,13 @@ else
         cmds+=('runas_logged_on_user xset dpms force off')
         # cmds+=('hibernate')
       elif (( POWER_SUPPLY_CAPACITY < power_supply_low_threshold )); then
+        cmds+=('runas_logged_on_user xset s 30 20') # blank screen more frequently
         cmds+=('pm-powersave true')
         cmds+=('tlp start')
         cmds+=('tlp bat')
         cmds+=('tlp usb')
       elif (( POWER_SUPPLY_CAPACITY < power_supply_react_threshold )); then
+        cmds+=('runas_logged_on_user xset s 120 20') # blank screen more frequently
         cmds+=('pm-powersave true')
         cmds+=('tlp start')
         cmds+=('tlp bat')
