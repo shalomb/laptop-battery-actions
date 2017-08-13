@@ -16,6 +16,7 @@ source "$DIR/functions"
 log "Executing $script '$args' $$ $PPID"
 
 source <(sed -r 's/= /=/g' /sys/class/power_supply/AC/uevent)
+AC_POWER_SUPPLY_ONLINE="$POWER_SUPPLY_ONLINE"
 
 log "POWER_SUPPLY_NAME : $POWER_SUPPLY_NAME, POWER_SUPPLY_ONLINE : $POWER_SUPPLY_ONLINE"
 
@@ -36,11 +37,10 @@ else
     log "  $POWER_SUPPLY_NAME $POWER_SUPPLY_STATUS $POWER_SUPPLY_CAPACITY"
   
     log "Collecting actions for '$POWER_SUPPLY_STATUS'"
-    [[ $POWER_SUPPLY_STATUS = Unknown ]] && continue
+    (( AC_POWER_SUPPLY_ONLINE == 1 )) && continue
   
-    if [[ $POWER_SUPPLY_STATUS = Discharging ]]; then
+    if [[ $POWER_SUPPLY_STATUS == Discharging || $AC_POWER_SUPPLY_ONLINE == 0 ]]; then
   
-      cmds+=("runas_logged_on_user xbacklight -set $POWER_SUPPLY_CAPACITY")
       cmds+=("cpufreq-set --related --governor=powersave")
   
       if (( POWER_SUPPLY_CAPACITY < power_supply_critical_threshold )); then
