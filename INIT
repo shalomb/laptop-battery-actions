@@ -14,9 +14,9 @@ set -eu
 cd "$DIR"
 
 aptitude install -y \
-  libgl1-mesa-dri xserver-xorg-video-intel libdrm-intel1 xbacklight \
-  iucode-tool intel-microcode rsync tlp cpufrequtils acpi acpid \
-  acpi-support-base laptop-detect
+  acpi acpi-call-dkms acpid acpi-support-base cpufrequtils intel-microcode \
+  iucode-tool laptop-detect libdrm-intel1 libgl1-mesa-dri rsync smartmontools \
+  smartmontools tlp xbacklight xserver-xorg-video-intel
 
 find etc/ -type f ! -iname "*.sw?" \
 	-exec install -g root -o root -m 0755 -C -D -v {} /{} \;
