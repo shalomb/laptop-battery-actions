@@ -48,10 +48,12 @@ else
       if (( POWER_SUPPLY_CAPACITY < power_supply_critical_threshold )); then
         log "  $POWER_SUPPLY_NAME critically low ($POWER_SUPPLY_CAPACITY < $power_supply_critical_threshold)"
         cmds+=("wall '$POWER_SUPPLY_NAME capacity ($POWER_SUPPLY_CAPACITY%) critically low'")
-        cmds+=('runas_logged_on_user aplay /usr/lib/libreoffice/share/gallery/sounds/beam.wav')
+        #cmds+=('runas_logged_on_user pactl set-sink-volume @DEFAULT_SINK@ 40%')
+        #cmds+=('runas_logged_on_user aplay /usr/lib/libreoffice/share/gallery/sounds/falling.wav')
+        cmds+=('pm-powersave true')
         cmds+=('runas_logged_on_user xscreensaver-command -lock')
         cmds+=('runas_logged_on_user xset dpms force off')
-        # cmds+=('hibernate')
+        cmds+=('pm-hibernate')
       elif (( POWER_SUPPLY_CAPACITY < power_supply_low_threshold )); then
         cmds+=('runas_logged_on_user xset s 30 20') # blank screen more frequently
         cmds+=('pm-powersave true')

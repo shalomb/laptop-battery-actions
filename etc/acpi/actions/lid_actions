@@ -21,6 +21,7 @@ case "$event" in
 	"close")
 		cmds+=('runas_logged_on_user xscreensaver-command -lock')
 		cmds+=('runas_logged_on_user xset dpms force off')
+		cmss+=('pm-suspend')
 	;;
 	"open")
 		cmds+=('runas_logged_on_user xset dpms force on')
