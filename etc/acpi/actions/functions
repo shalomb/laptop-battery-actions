@@ -4,8 +4,6 @@ lid_state=$(< /proc/acpi/button/lid/LID/state)
 
 log() {
   logger -it "$script" "$*"
-  mil=`date +%N | sed -r 's/.{6}$//'`
-  echo "`date +%FT%T.$mil` : $@" >> /tmp/low_battery.log
 }
 
 function hibernate {
@@ -25,13 +23,14 @@ function runas_logged_on_user {
 
 run_cmds() {
   for cmd; do
-    $cmd
+    $cmd;
     log "  $cmd : $?"
   done
 }
 
 percentage_of() {
-	local v="$1"
-	local p="$2"
-	perl -le 'print int((6/'"$p"') + ('"$v"'/100*'"$p"'))'
+  local v="$1"
+  local p="$2"
+  perl -le 'print int((6/'"$p"') + ('"$v"'/100*'"$p"'))'
 }
+
