@@ -34,3 +34,13 @@ percentage_of() {
   perl -le 'print int((6/'"$p"') + ('"$v"'/100*'"$p"'))'
 }
 
+blink_power_led() {
+  {
+    local period="$1"
+    echo "0 blink" > /proc/acpi/ibm/led
+    if [[ -n "$period" ]]; then
+      sleep "$period"
+      echo "0 on" > /proc/acpi/ibm/led
+    fi
+  } &
+}

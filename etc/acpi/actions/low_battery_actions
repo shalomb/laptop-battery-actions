@@ -27,6 +27,7 @@ if (( POWER_SUPPLY_ONLINE == 1 )); then
   cmds+=('tlp false')
   cmds+=('tlp ac')
   cmds+=("cpufreq-set --related --governor=performance")
+  cmds+=('blink_power_led 1')
 else
   for path in /sys/class/power_supply/!(AC); do
   
@@ -50,6 +51,7 @@ else
         cmds+=("wall '$POWER_SUPPLY_NAME capacity ($POWER_SUPPLY_CAPACITY%) critically low'")
         #cmds+=('runas_logged_on_user pactl set-sink-volume @DEFAULT_SINK@ 40%')
         #cmds+=('runas_logged_on_user aplay /usr/lib/libreoffice/share/gallery/sounds/falling.wav')
+        cmds+=('blink_power_led')
         cmds+=('pm-powersave true')
         cmds+=('runas_logged_on_user xscreensaver-command -lock')
         cmds+=('runas_logged_on_user xset dpms force off')
@@ -60,12 +62,14 @@ else
         cmds+=('tlp start')
         cmds+=('tlp bat')
         cmds+=('tlp usb')
+        cmds+=('blink_power_led 10')
       elif (( POWER_SUPPLY_CAPACITY < power_supply_react_threshold )); then
         cmds+=('runas_logged_on_user xset s 120 20') # blank screen more frequently
         cmds+=('pm-powersave true')
         cmds+=('tlp start')
         cmds+=('tlp bat')
         cmds+=('tlp usb')
+        cmds+=('blink_power_led 2')
       fi
     else
       cmds+=('tlp start')
